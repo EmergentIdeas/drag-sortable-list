@@ -1,0 +1,31 @@
+.full-back {
+	background-position: center center;
+	background-repeat: no-repeat;
+	background-size: cover;
+}
+
+.ratio(@ratio) {
+	&:before {
+		content: '\00a0';
+		display: inline-block;
+		width: 0;
+		font-size: 0;
+		height: 0;
+		padding-top: @ratio / 2 * 100%;
+		padding-bottom: @ratio / 2 * 100%;
+		vertical-align: middle;
+	}
+	@supports (aspect-ratio: @ratio) {
+		aspect-ratio: 1 / @ratio;
+	}
+	@supports (aspect-ratio: @ratio) {
+		&:before {
+			display: none;
+		}
+	}
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+

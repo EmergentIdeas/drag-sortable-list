@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+
+<meta charset="UTF-8">
+
+<title>__page.title__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<meta name="description" content="__page.description__" />
+<meta name="viewport" content="width=device-width" />
+<meta name="built-by" content="Dan Kolz of Emergent Ideas" />
+<script>
+	var webpdetect = function() {
+		function addClass(className) {
+			document.getElementsByTagName('html')[0].classList.add(className)
+		}
+		function removeClass(className) {
+			document.getElementsByTagName('html')[0].classList.remove(className)
+		}
+		var img = new Image()
+		img.onload = function() { addClass('webp') }
+		img.onerror = function() { addClass('no-webp') }
+		img.src = 'data:image/webp;base64,UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoBAAEAAwA0JaQAA3AA/vuUAAA='
+		
+		removeClass('no-js')
+	}
+	webpdetect()
+</script>
+
+<link href="/css/pages.css" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;800&display=swap" rel="stylesheet">
+
+
+</head>
+<body class="modern ready-to-load-img">

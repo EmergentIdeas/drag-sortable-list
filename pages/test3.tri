@@ -1,0 +1,44 @@
+__::start__
+<div class="page page-landing">
+	<div class="container-wrapper">
+		<main class="container edit-content-inline">
+			<div class="list1 webhandle-drag-sortable-list">
+				<div class="cell">
+					<span class="handle">↕</span>
+					a <a href="#">link a</a>
+				</div>
+				<div class="cell">
+					<span class="handle">↕</span>
+					b <a href="#">link b</a>
+				</div>
+				<div class="cell">
+					<span class="handle">↕</span>
+					c <a href="#">link c</a>
+				</div>
+				<div class="cell">
+					<span class="handle">↕</span>
+					d
+					<br>
+					e <a href="#">link d</a>
+				</div>
+				
+			</div>
+			<div class="file-cells">
+
+				<div class="cell" draggable="true" data-uri-list="data://browser/abc">
+					file1
+				</div>
+				<div class="cell" draggable="true" data-uri-list="http://files/file1.txt,http://files/file2.txt">
+					file2
+				</div>
+				<div class="cell no-label" draggable="true" data-uri-list="http://files/file1.txt,http://files/file2.txt">
+					file3
+				</div>
+				
+				
+			</div>
+		</main>
+	</div>
+
+</div>
+__::end__

@@ -1,0 +1,17 @@
+#!/bin/bash
+# Optimized web images are more complicated than they should be.
+# Ideally, all images would be in google's webp format, which is both smaller and supports transparencies.
+# Unfortunately, Safari doesn't support webp at all, so an intelligent decision needs to be made
+# about the fallback format, png if the image needs transparency, jpg because it's smaller.
+# Additionally, if the system is like a Mac with retina display (many desktops, lots of phones), the
+# images shown should be double density images, otherwise they look fuzzy. That's true regardless of
+# browser, so sometimes we want to show double density pngs, sometimes double density webp.
+
+# A prior step in the development process used gen-double-image-sizes.sh, part of the @dankolz/webp-detection
+# package to create images of multiple densities and formats, as well as a json file that describes the size
+# of the images.
+
+# The code below takes those json image description files to create a set of styles and html templates
+# which will allow them to be used easily the web pages. There's absolutely no need to build these artifacts,
+# the images can be used just as they are, but these artifacts make coding with these images faster.
+npx gen-image-pictures-and-styles -s public/img -v views/images -l less/images.less

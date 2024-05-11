@@ -1,0 +1,61 @@
+{
+	"name": "drag-sortable-list",
+	"version": "1.0.0",
+	"description": "",
+	"main": "client-js/index.js",
+	"scripts": {
+		"test": "node_modules/mocha/bin/mocha",
+		"less-build": "npx lessc --source-map --source-map-include-source less/pages.less public/css/pages.css",
+		"less-compress": "npx uglifycss public/css/pages.css > public/css/pages.min.css",
+		"client-js-build": "npx webpack --config pages.webpack.cjs",
+		"client-js-compress": "npx uglifyjs public/js/pages.cjs -o public/js/pages.min.cjs -c --source-map url=public/js/pages.min.cjs.map",
+		"client-js-browserify-build": "npm run client-js-pages-browserify-build",
+		"client-js-pages-browserify build": "npx browserify client-js/pages.cjs --debug | npx exorcist public/js/pages.cjs.map > public/js/pages.cjs",
+		"dev-less-watch": "onchange 'less/**/*.less' -- npm run less-build",
+		"dev-client-js-watch": "onchange 'client-js/**/*js' -- npm run client-js-build",
+		"dev-server-js-watch": "onchange 'server-js/**/*js' -- pm2 restart $npm_package_name-web",
+		"start": "node ./web-server.js",
+		"testDebug": "node --inspect-brk node_modules/mocha/bin/mocha",
+		"bg": "parallelshell 'npm run dev-less-watch' 'npm run dev-client-js-watch'",
+		"pm2-bg": "parallelshell 'npm run dev-less-watch' 'npm run dev-client-js-watch' 'npm run dev-server-js-watch'",
+		"dev": "parallelshell 'npm run start' 'npm run dev-less-watch' 'npm run dev-client-js-watch'"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@webhandle/backbone-view": "^1.0.2",
+		"@webhandle/minimal-browser-event-emitter": "^1.0.4"
+	},
+	"devDependencies": {
+		"browserify": "^14.4.0",
+		"chai": "^4.3.4",
+		"exorcist": "^2.0.0",
+		"express": "^4.17.1",
+		"file-sink": "^1.0.4",
+		"filter-log": "0.0.5",
+		"input-value-injector": "^1.0.8",
+		"jsdoc": "^3.6.11",
+		"less": "^3.10.3",
+		"mocha": "^9.1.3",
+		"node-polyfill-webpack-plugin": "^2.0.1",
+		"onchange": "^3.2.1",
+		"parallelshell": "3.0.1",
+		"raw-loader": "^4.0.2",
+		"tripartite": "^1.1.1",
+		"uglify-js": "^3.17.4",
+		"webhandle": "^1.0.32",
+		"webpack-cli": "^5.1.4"
+	},
+	"browserify": {
+		"transform": [
+			"tripartite/browserify-transform"
+		]
+	},
+	"files": [
+		"/client-lib/list-view.mjs",
+		"/less/components.less",
+		"/public"
+	],
+	"type": "module"
+}

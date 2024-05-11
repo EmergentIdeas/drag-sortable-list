@@ -1,0 +1,48 @@
+@import (inline) "normalize.css";
+
+@import "definitions";
+@import "basics";
+@import "components";
+
+
+.list1 {
+	width: 500px;
+	height: 500px;
+	border: solid 1px black;
+	
+	
+	.cell {
+		border-top: solid transparent 2px;
+		border-bottom: solid transparent 2px;
+		min-height: 10px;
+		background-color: #eeeeee;
+		background-clip: padding-box;
+		padding: 10px;
+		
+		&.dragging {
+			background-color: #cccccc;
+		}
+		
+		.handle {
+			display: inline-block;
+			text-align: center;
+			width: 40px;
+			background-color: #dddddd;
+		}
+	}
+}
+
+.file-cells {
+	display: inline-grid;
+	grid-template-columns: repeat(5, auto);
+	row-gap: 20px;
+	column-gap: 20px;
+
+	.cell {
+		width: 250px;
+		aspect-ratio: 1;
+		background-color: #eeeeee;
+		align-content: center;
+		text-align: center;
+	}
+}
