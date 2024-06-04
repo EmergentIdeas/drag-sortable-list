@@ -439,12 +439,14 @@ body {
   position: relative;
   overflow: auto;
 }
-.list1 {
+.list1,
+.list4 {
   width: 500px;
   height: 500px;
   border: solid 1px black;
 }
-.list1 .cell {
+.list1 .cell,
+.list4 .cell {
   border-top: solid transparent 2px;
   border-bottom: solid transparent 2px;
   min-height: 10px;
@@ -452,10 +454,12 @@ body {
   background-clip: padding-box;
   padding: 10px;
 }
-.list1 .cell.dragging {
+.list1 .cell.dragging,
+.list4 .cell.dragging {
   background-color: #cccccc;
 }
-.list1 .cell .handle {
+.list1 .cell .handle,
+.list4 .cell .handle {
   display: inline-block;
   text-align: center;
   width: 40px;
@@ -473,5 +477,10 @@ body {
   background-color: #eeeeee;
   align-content: center;
   text-align: center;
+}
+.event-log {
+  border: solid 1px black;
+  height: 200px;
+  overflow: auto;
 }
 /*# sourceMappingURL=pages.css.map */

@@ -38,6 +38,38 @@ __::start__
 				
 			</div>
 		</main>
+		<div class="container">
+			<h2>Tests for this page</h2>
+			<ol>
+				<li>
+					Make sure an added item can be dragged.
+				</li>
+				<li>
+					When dragging the file 1 box into the list, make sure that "file1" shows up as the placeholder
+				</li>
+				<li>
+					When dragging the file 2 box into the list, make sure that "file2" shows up as the placeholder
+					
+				</li>
+				<li>
+					When dropping file 1, it should create one item: data://browser/abc
+					
+				</li>
+				<li>
+					When dropping file 2, it should create two items: http://files/file1.txt, http://files/file2.txt
+					
+				</li>
+				<li>
+					Ensure file 3 box has no effect when dropped on the list.	
+				</li>
+				<li>
+					Ensure dropped items are inserted at the correct location
+				</li>
+				<li>
+					Add a ton of objects to the list and make sure you can still drag to the top and end.
+				</li>
+			</ol>
+		</div>
 	</div>
 
 </div>

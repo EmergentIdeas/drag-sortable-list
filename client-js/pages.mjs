@@ -1,9 +1,3 @@
-import {default as go} from './index.js'
-go()
-
-
-// import process from "process";
-// process.version
 
 import ListView from '../client-lib/list-view.mjs'
 
@@ -21,6 +15,16 @@ if(elList1) {
 		}
 	})
 	list1.render()
+	
+	let emitter = list1.emitter
+	emitter.on('list-change', (evt) => {
+		let eventLog = document.querySelector('.event-log')
+		evt.cells.forEach(cell => {
+			eventLog.innerHTML = eventLog.innerHTML + evt.type + ': ' + cell.innerText + '\n'
+		})
+	})
+	
+
 }
 
 
@@ -40,9 +44,25 @@ if(elList2) {
 	list2.render()
 }
 
+let elList4 = document.querySelector('.list4')
+if(elList4) {
+	let list4 = new ListView({
+		el: elList4
+		, mobileHandleSelector: '.cell .handle'
+		, desktopHandleSelector: '.handle' 
+		, events: {
+			'click a': 'linkClick'
+		}
+		, linkClick(evt, selected) {
+			evt.preventDefault()
+			console.log(selected.innerText)
+		}
+	})
+	list4.render()
+}
+
 document.querySelectorAll('.file-cells .cell').forEach(cell => {
 	cell.addEventListener('dragstart', (evt) => {
-		// let uriListText = cell.getAttribute('data-uri-list').split(',').join('\r\n') + '\r\n'
 		let uriListText = cell.getAttribute('data-uri-list')
 		evt.dataTransfer.setData('text', uriListText)
 		evt.dataTransfer.setData('text/uri-list', uriListText)
@@ -53,3 +73,5 @@ document.querySelectorAll('.file-cells .cell').forEach(cell => {
 		}
 	})
 })
+
+

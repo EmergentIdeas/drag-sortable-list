@@ -62,6 +62,14 @@ __::start__
 				
 			</div>
 		</main>
+		<div class="container">
+			<h2>Tests for this page</h2>
+			<ol>
+				<li>
+					Make sure items can be dragged even though the list is unstyled
+				</li>
+			</ol>
+		</div>
 	</div>
 
 </div>

@@ -2,7 +2,7 @@
 	"name": "drag-sortable-list",
 	"version": "1.0.0",
 	"description": "",
-	"main": "client-js/index.js",
+	"main": "client-lib/list-view.mjs",
 	"scripts": {
 		"test": "node_modules/mocha/bin/mocha",
 		"less-build": "npx lessc --source-map --source-map-include-source less/pages.less public/css/pages.css",
@@ -12,7 +12,8 @@
 		"client-js-browserify-build": "npm run client-js-pages-browserify-build",
 		"client-js-pages-browserify build": "npx browserify client-js/pages.cjs --debug | npx exorcist public/js/pages.cjs.map > public/js/pages.cjs",
 		"dev-less-watch": "onchange 'less/**/*.less' -- npm run less-build",
-		"dev-client-js-watch": "onchange 'client-js/**/*js' -- npm run client-js-build",
+		"dev-client-js-watch-old": "onchange 'client-lib/**/*js' 'client-js/**/*js' -- npm run client-js-build",
+		"dev-client-js-watch": "npx webpack --watch --config pages.webpack.cjs",
 		"dev-server-js-watch": "onchange 'server-js/**/*js' -- pm2 restart $npm_package_name-web",
 		"start": "node ./web-server.js",
 		"testDebug": "node --inspect-brk node_modules/mocha/bin/mocha",
@@ -54,6 +55,7 @@
 	},
 	"files": [
 		"/client-lib/list-view.mjs",
+		"README.md",
 		"/less/components.less",
 		"/public"
 	],

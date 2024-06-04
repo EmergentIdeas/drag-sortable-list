@@ -1,0 +1,39 @@
+__::start__
+<div class="page page-landing">
+	<div class="container-wrapper">
+		<main class="container ">
+			<div class="list4 webhandle-drag-sortable-list">
+				<div class="cell">
+					<span class="handle">↕</span>
+					a <a href="#">link a</a>
+				</div>
+				<div class="cell">
+					<span class="handle">↕</span>
+					b <a href="#">link b</a>
+				</div>
+				<div class="cell">
+					<span class="handle">↕</span>
+					c <a href="#">link c</a>
+				</div>
+				<div class="cell">
+					<span class="handle">↕</span>
+					d
+					<br>
+					e <a href="#">link d</a>
+				</div>
+				
+			</div>
+		</main>
+		<div class="container">
+			<h2>Tests for this page</h2>
+			<ol>
+				<li>
+				Make sure that the list items can only be dragged using the handle.
+				</li>
+				
+			</ol>
+		</div>
+	</div>
+
+</div>
+__::end__

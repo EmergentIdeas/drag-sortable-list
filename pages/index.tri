@@ -9,5 +9,8 @@ __::start__
 	<p>
 		<a href="/test3">Test 3</a>
 	</p>
+	<p>
+		<a href="/test4">Test 4</a>
+	</p>
 </div>
 __::end__

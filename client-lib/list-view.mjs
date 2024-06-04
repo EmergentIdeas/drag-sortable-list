@@ -8,7 +8,7 @@ export default class ListView extends View {
 	 * @param {Object} options 
 	 */
 	preinitialize(options = {}) {
-		this.desktopHandleSelector = options.desktopHandleSelector || `*`
+		this.desktopHandleSelector = options.desktopHandleSelector 
 		this.mobileHandleSelector = options.mobileHandleSelector || '.handle'
 		this.events = Object.assign({}, {
 			'drop .': 'handleDrop'
@@ -17,7 +17,7 @@ export default class ListView extends View {
 			, 'dragover .': 'handleDragover'
 			, 'dragenter .': 'dragEnter'
 			, 'dragover *': 'dragEnterCell'
-			, ['dragstart ' + this.desktopHandleSelector]: 'dragStart'
+			, 'dragstart *': 'dragStart'
 			, ['touchstart ' + this.mobileHandleSelector]: 'touchDrag'
 			, ['touchmove ' + this.mobileHandleSelector]: 'touchMove'
 			, ['touchend ' + this.mobileHandleSelector]: 'touchEnd'
@@ -401,9 +401,12 @@ export default class ListView extends View {
 	 * @param {Element} selected 
 	 */
 	handleDrop(evt, selected) {
-		let textContent = evt.dataTransfer.getData('text')
-		let uriList = evt.dataTransfer.getData('text/uri-list')
 		evt.preventDefault()
+
+		let uriList
+		if(evt.dataTransfer) {
+			uriList = evt.dataTransfer.getData('text/uri-list')
+		}
 		
 		if(this.externalDrag) {
 			let changes = []
@@ -538,9 +541,16 @@ export default class ListView extends View {
 	 * Sets up the cells to be draggable and makes the mobile touch handles ready for drag.
 	 */
 	render() {
-		this.getCells().forEach(cell => {
-			cell.setAttribute("draggable", true)
-		})
+		if(this.desktopHandleSelector) {
+			this.el.querySelectorAll(this.desktopHandleSelector).forEach(handle => {
+				handle.setAttribute("draggable", true)
+			})
+		}
+		else {
+			this.getCells().forEach(cell => {
+				cell.setAttribute("draggable", true)
+			})
+		}
 		if(this.mobileHandleSelector) {
 			this.el.querySelectorAll(this.mobileHandleSelector).forEach(handle => {
 				handle.style['touch-action'] = 'none'
@@ -583,7 +593,5 @@ export default class ListView extends View {
 		return this.getCellFromChild(child.parentElement)
 	}
 }
-
-
 
 
