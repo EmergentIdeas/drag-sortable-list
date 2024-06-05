@@ -1,7 +1,7 @@
 {
-	"name": "drag-sortable-list",
+	"name": "@webhandle/drag-sortable-list",
 	"version": "1.0.0",
-	"description": "",
+	"description": "Makes lists of things sortable by dragging",
 	"main": "client-lib/list-view.mjs",
 	"scripts": {
 		"test": "node_modules/mocha/bin/mocha",
@@ -54,10 +54,9 @@
 		]
 	},
 	"files": [
-		"/client-lib/list-view.mjs",
+		"/client-lib",
 		"README.md",
-		"/less/components.less",
-		"/public"
+		"/public/js/index*"
 	],
 	"type": "module"
 }

@@ -322,7 +322,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 		let html = this.createExternalDragPlaceholderHTML(evt)
 		let cell = this._makeElementFromHTML(html)
 		cell.setAttribute('draggable', true)
-		this.el.appendChild(cell)
+		this.addCell(cell)
 		this.dragStart(evt, cell)
 	}
 
@@ -369,13 +369,14 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	 * @returns an array of Elements
 	 */
 	createCellsForFiles(files) {
-		let names = files.map(file => file.name)
-		let cells = names.map(name => {
+		let cells = files.map(file => {
 			let html = `<div class="cell">
 				<span class="handle">↕</span>
-				${name}
+				${file.name}
 			</div>`
-			return this._makeElementFromHTML(html)
+			let el = this._makeElementFromHTML(html)
+			el.data = file
+			return el
 		})
 		return cells
 	}
@@ -383,18 +384,20 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	/**
 	 * Creates permanent cells for resource objects dropped into the list
 	 * @param {array[string]} uriList 
-	 * @returns 
+	 * @returns an array of Elements
 	 */
 	createCellsForUriList(uriList) {
 		if(!Array.isArray(uriList)) {
 			uriList = [uriList]
 		}
-		let cells = uriList.map(name => {
+		let cells = uriList.map(uri => {
 			let html = `<div class="cell">
 				<span class="handle">↕</span>
-				${name}
+				${uri}
 			</div>`
-			return this._makeElementFromHTML(html)
+			let el = this._makeElementFromHTML(html)
+			el.data = uri
+			return el
 		})
 		return cells
 	}
@@ -402,7 +405,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	/**
 	 * Creates permanent cells for drops of unknown types.
 	 * @param {Event} evt 
-	 * @returns 
+	 * @returns An array of elements
 	 */
 	createCellsForUnknownType(evt) {
 		return []
@@ -422,7 +425,9 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 			uriList = evt.dataTransfer.getData('text/uri-list')
 		}
 		
-		if(this.externalDrag) {
+		if(this.externalDrag || uriList) {
+			// if a link is dropped, there's no exteralDrag object, just a drop object
+
 			let changes = []
 			let files = this._getFilesFromEvent(evt)
 			let cells = []
@@ -459,13 +464,17 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 
 			for(let cell of cells) {
 				cell.setAttribute('draggable', true)
-				this.el.insertBefore(cell, this.dragging)
+				this.addCell(cell, {
+					before: this.dragging
+				})
 				changes.push({
 					cell: cell
 					, file: cell.file
 				})
 			}
-			this.dragging.remove()
+			if(this.dragging) {
+				this.dragging.remove()
+			}
 			this.emitter.emit('list-change', {
 				type: 'drop'
 				, cells: cells
@@ -483,6 +492,40 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 		}
 		this.cleanupDrag()
 	}
+	
+	/**
+	 * Adds a new item to the list, last item by default 
+	 * @param {string|Element} cell The item to add 
+	 * @param {*} [options]
+	 * @param {boolean} options.first If true inserted at the start of the list
+	 * @param {boolean} options.last If true inserted at the end of the list
+	 * @param {Element} options.after Insert after this item 
+	 * @param {Element} options.before Insert before this item
+	 * @param {*} options.data Data to be set on the element
+	 */
+	addCell(cell, options = {}) {
+		if(typeof cell === 'string') {
+			cell = this._makeElementFromHTML(cell)
+		}
+
+		if(options.data) {
+			cell.data = options.data
+		}
+		
+		if(options.first) {
+			this.el.insertAdjacentElement('afterbegin', cell)
+		}
+		else if(options.before) {
+			this.el.insertBefore(cell, options.before)
+		}
+		else if(options.after) {
+			options.after.after(cell)
+		}
+		else {
+			this.el.insertAdjacentElement('beforeend', cell)
+		}
+		return cell
+	}
 
 	/**
 	 * 
@@ -490,14 +533,9 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	 */
 	positionOnDrag(pos) {
 		let over = this.findOver(pos)
-
-		if (!over) {
-			// it's in the blank space at the end
-			this.el.appendChild(this.dragging)
-		}
-		else if (over != this.dragging) {
-			this.el.insertBefore(this.dragging, over)
-		}
+		this.addCell(this.dragging, {
+			before: over
+		})
 	}
 
 	/**
@@ -1188,9 +1226,11 @@ if(elList1) {
 	let emitter = list1.emitter
 	emitter.on('list-change', (evt) => {
 		let eventLog = document.querySelector('.event-log')
-		evt.cells.forEach(cell => {
-			eventLog.innerHTML = eventLog.innerHTML + evt.type + ': ' + cell.innerText + '\n'
-		})
+		if(evt.cells && evt.cells.length > 0) {
+			evt.cells.forEach(cell => {
+				eventLog.innerHTML = eventLog.innerHTML + evt.type + ': ' + cell.innerText + '\n'
+			})
+		}
 	})
 	
 

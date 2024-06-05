@@ -23,6 +23,10 @@ __::start__
 				</div>
 				
 			</div>
+			<div class="links">
+				<a href="/test1">test1</a>
+				
+			</div>
 			<div class="file-cells">
 
 				<div class="cell" draggable="true" data-uri-list="data://browser/abc">
@@ -60,13 +64,16 @@ __::start__
 					
 				</li>
 				<li>
-					Ensure file 3 box has no effect when dropped on the list.	
+					Ensure file 3 box gets added even if there's no placeholder
 				</li>
 				<li>
 					Ensure dropped items are inserted at the correct location
 				</li>
 				<li>
 					Add a ton of objects to the list and make sure you can still drag to the top and end.
+				</li>
+				<li>
+					Drag the link onto the list and make sure it creates an item if there's no placeholder.
 				</li>
 			</ol>
 		</div>

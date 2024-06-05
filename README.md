@@ -12,6 +12,7 @@ something like sortable.js, which is great, but 300k.
 ```bash
 npm install @webhandle/drag-sortable-list
 ```
+This can be used in the normal way, but there's also a compiled version at `public/js/index.js`
 
 # Usage
 
@@ -158,4 +159,35 @@ let list1 = new ListView({
 	}
 })
 list1.render()
+```
+
+### Options
+
+For creating new cells from dropped items.
+
+```js
+
+/**
+ * Creates permanent cells for files dropped into the list
+ * @param {array} files 
+ * @returns an array of Elements
+ */
+createCellsForFiles(files) 
+
+
+/**
+ * Creates permanent cells for resource objects dropped into the list
+ * @param {array[string]} uriList 
+ * @returns an array of Elements 
+ */
+createCellsForUriList(uriList) 
+
+
+/**
+ * Creates permanent cells for drops of unknown types.
+ * @param {Event} evt 
+ * @returns An array of elements
+ */
+createCellsForUnknownType(evt) 
+
 ```
