@@ -169,7 +169,7 @@ For creating new cells from dropped items.
 
 /**
  * Creates permanent cells for files dropped into the list
- * @param {array} files 
+ * @param {array[FileEntry]} files 
  * @returns an array of Elements
  */
 createCellsForFiles(files) 

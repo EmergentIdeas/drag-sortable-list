@@ -1,5 +1,154 @@
 /******/ var __webpack_modules__ = ({
 
+/***/ "./client-lib/data-item-worker.mjs":
+/*!*****************************************!*\
+  !*** ./client-lib/data-item-worker.mjs ***!
+  \*****************************************/
+/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ DataItemWorker)
+/* harmony export */ });
+
+class DataItemWorker {
+
+	async getFileFromEntry(entry) {
+		let p = new Promise(async (resolve, reject) => {
+			try {
+				if (entry.file) {
+					entry.file(file => {
+						file.entry = entry
+						resolve(file)
+					}, (err) => {
+						console.error(err)
+						resolve(null)
+					})
+				}
+				else {
+					resolve(null)
+				}
+			}
+			catch (e) {
+				console.error(e)
+				resolve(null)
+			}
+		})
+		return p
+	}
+
+	async readDirectoryEntries(entry) {
+		let p = new Promise((resolve, reject) => {
+			let dirReader = entry.createReader()
+			let result = []
+			let readThem = () => {
+				dirReader.readEntries(async (entries) => {
+					try {
+						if(entries && entries.length > 0) {
+							for (let entry of entries) {
+								result.push(entry)
+							}
+							readThem()
+						}
+						else {
+							resolve(result)
+						}
+					}
+					catch (e) {
+						console.error(e)
+						resolve(result)
+					}
+				})
+			}
+			readThem()
+		})
+		return p
+	}
+
+	/**
+	 * 
+	 * Takes a list of DataTransferItems and resolves them to FileEntry objects.
+	 * 
+	 * Note, you can get a real File object by calling `getFileFromEntry`
+	 * @param {array[DataTransferItem|File|FileEntry|DirectoryEntry]} entries 
+	 * @param {*} [options]
+	 * @returns 
+	 */
+	async expandEntries(entries, options) {
+		options = Object.assign({
+			keepDirectories: false
+			, recursive: true
+		}, options)
+		let expanded = []
+		let target = [...entries]	
+		
+		while(target.length > 0) {
+			
+			// You MUST process all of the DataTransferItems first. If you do a directory read
+			// it will blank out the information on those items.
+			let item = target.shift()
+			
+			if(item instanceof File) {
+				expanded.push(item)
+			}
+			else if(item.isFile === true && item.isDirectory === false) {
+				expanded.push(item)
+			}
+			else if(item.isFile === false && item.isDirectory === true) {
+				let dirEntries = await this.readDirectoryEntries(item)
+				if(options.recursive) {
+					target.push(...dirEntries)
+				}
+				else {
+					if(!options.keepDirectories) {
+						dirEntries = dirEntries.filter(item => item.isFile)
+					}
+					expanded.push(...dirEntries)
+				}
+				if(options.keepDirectories) {
+					expanded.push(item)
+				}
+			}
+			else if (item.kind === "file") {
+				if (item.webkitGetAsEntry) {
+					let entry = item.webkitGetAsEntry()
+					if (entry) {
+						target.push(entry)
+					}
+				}
+				else if(item.getAsFile) {
+					target.push(item.getAsFile())
+				}
+			}
+		}
+		
+		expanded = expanded.filter(item => !!item)
+		return expanded
+	}
+
+	/**
+	 * A utility function to extract the file entries from a file drop event.
+	 * @param {Event} evt 
+	 * @returns 
+	 */
+	async getFileEntriesFromEvent(evt, options) {
+		let entries = []
+		// items is the new interface we should use if that's available
+		if (evt.dataTransfer.items) {
+			entries.push(...evt.dataTransfer.items)
+		} 
+		else if(evt.dataTransfer.files) {
+			entries.push(...evt.dataTransfer.files)
+		}
+		let result = await this.expandEntries(entries, options)
+		return result.filter(item => !!item)
+	}
+
+
+}
+
+/***/ }),
+
 /***/ "./client-lib/list-view.mjs":
 /*!**********************************!*\
   !*** ./client-lib/list-view.mjs ***!
@@ -12,8 +161,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @webhandle/backbone-view */ "./node_modules/@webhandle/backbone-view/client-js/index.js");
 /* harmony import */ var _webhandle_minimal_browser_event_emitter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @webhandle/minimal-browser-event-emitter */ "./node_modules/@webhandle/minimal-browser-event-emitter/client-js/index.js");
+/* harmony import */ var _data_item_worker_mjs__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./data-item-worker.mjs */ "./client-lib/data-item-worker.mjs");
 
 
+
+
+let dataItemWorker = new _data_item_worker_mjs__WEBPACK_IMPORTED_MODULE_2__["default"]()
 
 class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.View {
 
@@ -22,7 +175,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	 * @param {Object} options 
 	 */
 	preinitialize(options = {}) {
-		this.desktopHandleSelector = options.desktopHandleSelector 
+		this.desktopHandleSelector = options.desktopHandleSelector
 		this.mobileHandleSelector = options.mobileHandleSelector || '.handle'
 		this.events = Object.assign({}, {
 			'drop .': 'handleDrop'
@@ -44,7 +197,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 		}
 		this.overscrollCaptures = {}
 	}
-	
+
 	/**
 	 * Returns true if a file is being dragged into the list.
 	 * @param {Event} evt 
@@ -56,9 +209,9 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 				return true
 			}
 		}
-		if(evt.dataTransfer && evt.dataTransfer.types) {
-			for(let type of evt.dataTransfer.types) {
-				if(type.toLowerCase() == 'files') {
+		if (evt.dataTransfer && evt.dataTransfer.types) {
+			for (let type of evt.dataTransfer.types) {
+				if (type.toLowerCase() == 'files') {
 					return true
 				}
 			}
@@ -66,7 +219,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 
 		return false
 	}
-	
+
 	/**
 	 * Looks to see if there's a resource label and we should therefore consider this an
 	 * external resource object that's being dragged into the list.
@@ -76,7 +229,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	isResourceTypeDrag(evt) {
 		return !!this.extractLabel(evt)
 	}
-	
+
 	/**
 	 * Watches for entry of dragging into a cell so we can tell of the user is still
 	 * performing a drag operation.
@@ -86,7 +239,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	dragEnterCell(evt, selected) {
 		this.canCancel = false
 	}
-	
+
 	/**
 	 * Watch for the end of dragging for one of the existing cells. This is the cleanup
 	 * for the case where a user is dragging and then presses escape.
@@ -96,7 +249,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	handleDragEnd(evt, selected) {
 		this.cleanupDrag()
 	}
-	
+
 	/**
 	 * Watches for the mouse leaving the list area. The spec has no good way to tell if the user
 	 * has stopped dragging within our control area, so here we're doing a little dance to watch
@@ -110,70 +263,21 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	 * @param {Element} selected 
 	 */
 	handleDragLeave(evt, selected) {
-		if(this.externalDrag) {
-			if(evt.target == this.el || this.getCells().includes(evt.target)) {
+		if (this.externalDrag) {
+			if (evt.target == this.el || this.getCells().includes(evt.target)) {
 				// so we're leaving the whole list. If we don't immediately enter someplace else
 				// then we should interpret this as a cancel
 				// In this case, "the whole list" is one of the cells or the container
 				this.canCancel = true
 				setTimeout(() => {
-					if(this.canCancel) {
+					if (this.canCancel) {
 						this.cleanupDrag()
 					}
 				}, 20)
 			}
 		}
 	}
-	
-	/**
-	 * A utility function to extract the files from a file drop event.
-	 * @param {Event} evt 
-	 * @returns 
-	 */
-	_getFilesFromEvent(evt) {
-		let files = []
 
-		// items is the new interface we should use if that's available
-		if (evt.dataTransfer.items) {
-			let foundItems = [];
-			[...evt.dataTransfer.items].forEach((item, i) => {
-				foundItems.push(item)
-			})
-			for (let item of foundItems) {
-				if (item.kind === "file") {
-					if (item.webkitGetAsEntry) {
-						let entry = item.webkitGetAsEntry()
-						if (entry) {
-							// if there's no entry, it's probably not a file, so we'll just ignore
-							if (entry.isDirectory) {
-								continue
-
-								// Evenually we'll want to handle directories too, but for now we'll just go
-								// on with the other items
-
-								// var dirReader = entry.createReader()
-								// dirReader.readEntries(function (entries) {
-								// 	console.log(entries)
-								// })
-							}
-						}
-					}
-					files.push(item.getAsFile())
-				}
-				else if (item instanceof File) {
-					// Maybe from a file input element
-					files.push(item)
-				}
-			}
-		} else {
-			[...evt.dataTransfer.files].forEach((file, i) => {
-				files.push(file)
-			})
-		}
-		return files.filter(file => !!file)
-	}
-
-	
 	/**
 	 * Returns true if this is a type of object from outside the list that can be added
 	 * to the list. By default it allows files and uri-list types. To turn off the abilty
@@ -216,7 +320,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	touchEnd(evt, selected) {
 		this.handleDrop(evt, selected)
 	}
-	
+
 	/**
 	 * Cleanup after a mobile drag
 	 * @param {Event} evt 
@@ -236,11 +340,11 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	dragStart(evt, selected) {
 		this.dragging = this.getCellFromChild(selected)
 		this.dragging.classList.add('dragging')
-		if(evt.dataTransfer) {
+		if (evt.dataTransfer) {
 			evt.dataTransfer.setDragImage(document.createElement('div'), 0, 0)
 		}
 	}
-	
+
 	/**
 	 * Extracts a placeholder label from the data transfer types. The label name is
 	 * part of the type name. So, a type of `data:text/label,awesome` would indicate
@@ -251,11 +355,11 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	extractLabel(evt) {
 		let labelPrefix = 'data:text/label,'
 		for (let type of evt.dataTransfer.types) {
-			if(type.indexOf(labelPrefix) == 0) {
+			if (type.indexOf(labelPrefix) == 0) {
 				return type.substring(labelPrefix.length)
 			}
 		}
-		
+
 		return null
 	}
 
@@ -265,7 +369,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	 * @param {string} elName 
 	 */
 	restoreOverscroll(elName) {
-		if(elName in this.overscrollCaptures) {
+		if (elName in this.overscrollCaptures) {
 			document.querySelector(elName).style['overscroll-behavior'] = this.overscrollCaptures[elName]
 			delete this.overscrollCaptures[elName]
 		}
@@ -295,8 +399,8 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 		let child = div.children[0]
 		return child
 	}
-	
-	
+
+
 	/**
 	 * Creates markup for the external drag event placeholder cell. Attempts
 	 * to determine a reasonable label.
@@ -312,7 +416,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 		return html
 
 	}
-	
+
 	/**
 	 * Creates a placeholder cell for a drag event where the source is an
 	 * external object like a file or something else on the page.
@@ -327,7 +431,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	}
 
 	dragEnter(evt, selected) {
-		if(!this.dragging && this.shouldInsertCellForExternalDrag(evt)) {
+		if (!this.dragging && this.shouldInsertCellForExternalDrag(evt)) {
 			// If we're not already doing a drag operation, we need to start one
 			// We create a placeholder for this event and then move it up and down
 			// like a pre-existing cell. 
@@ -350,22 +454,22 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 		let top = this.boxTop()
 		let pos = evt.y - top
 
-		if(this.dragging) {
-			if(evt.dataTransfer) {
+		if (this.dragging) {
+			if (evt.dataTransfer) {
 				evt.dataTransfer.dropEffect = 'move'
 			}
 			this.positionOnDrag(pos)
 		}
 		else {
-			if(evt.dataTransfer) {
+			if (evt.dataTransfer) {
 				evt.dataTransfer.dropEffect = 'copy'
 			}
 		}
 	}
-	
+
 	/**
 	 * Creates permanent cells for files dropped into the list
-	 * @param {array} files 
+	 * @param {array[FileEntry|File]} files 
 	 * @returns an array of Elements
 	 */
 	createCellsForFiles(files) {
@@ -380,14 +484,14 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 		})
 		return cells
 	}
-	
+
 	/**
 	 * Creates permanent cells for resource objects dropped into the list
 	 * @param {array[string]} uriList 
 	 * @returns an array of Elements
 	 */
 	createCellsForUriList(uriList) {
-		if(!Array.isArray(uriList)) {
+		if (!Array.isArray(uriList)) {
 			uriList = [uriList]
 		}
 		let cells = uriList.map(uri => {
@@ -410,7 +514,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	createCellsForUnknownType(evt) {
 		return []
 	}
-	
+
 	/**
 	 * Creates permanent cells for external items dropped into the list,
 	 * emits events, and does cleaup
@@ -419,80 +523,94 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	 */
 	handleDrop(evt, selected) {
 		evt.preventDefault()
-
-		let uriList
-		if(evt.dataTransfer) {
-			uriList = evt.dataTransfer.getData('text/uri-list')
-		}
 		
-		if(this.externalDrag || uriList) {
-			// if a link is dropped, there's no exteralDrag object, just a drop object
+		// Sometimes the placeholder gets cleaned up before the insertion of the new nodes
+		// happens. Let's capture the following element just in case we need it.
+		let afterDragElement
+		if(this.dragging) {
+			afterDragElement = this.dragging.nextElementSibling
+		}
 
-			let changes = []
-			let files = this._getFilesFromEvent(evt)
-			let cells = []
-			if(files && files.length > 0) {
-				cells = this.createCellsForFiles(files)
-				for(let count = 0; count < cells.length; count++) {
-					let cell = cells[count]
-					if(!cell.file) {
-						cell.file = files[count]
-					}
-				}
+		let p = new Promise(async (resolve, reject) => {
+			let uriList
+			if (evt.dataTransfer) {
+				uriList = evt.dataTransfer.getData('text/uri-list')
 			}
-			else if(uriList) {
-				if(typeof uriList == 'string') {
-					// Acording to the spec, this should be a list with one uri on every line
-					// In practice, it seems like the browser is eating the return characters
-					// In my tests, I'm passing multiple uris as comma separated. I'm handling
-					// both cases here.
-					let parts = [uriList]
-					for(let sep of ['\r\n', '\n', ',']) {
-						let newParts = []
-						for(let part of parts) {
-							newParts.push(...part.split(sep))
+
+			if (this.externalDrag || uriList) {
+				// if a link is dropped, there's no exteralDrag object, just a drop object
+
+				let changes = []
+				let files = await dataItemWorker.getFileEntriesFromEvent(evt, {
+					keepDirectories: false
+					, recursive: true
+				})
+				let cells = []
+				if (files && files.length > 0) {
+					cells = this.createCellsForFiles(files)
+					for (let count = 0; count < cells.length; count++) {
+						let cell = cells[count]
+						if (!cell.file) {
+							cell.file = files[count]
 						}
-						parts = newParts
 					}
-					uriList = parts
 				}
-				cells = this.createCellsForUriList(uriList)
+				else if (uriList) {
+					if (typeof uriList == 'string') {
+						// Acording to the spec, this should be a list with one uri on every line
+						// In practice, it seems like the browser is eating the return characters
+						// In my tests, I'm passing multiple uris as comma separated. I'm handling
+						// both cases here.
+						let parts = [uriList]
+						for (let sep of ['\r\n', '\n', ',']) {
+							let newParts = []
+							for (let part of parts) {
+								newParts.push(...part.split(sep))
+							}
+							parts = newParts
+						}
+						uriList = parts
+					}
+					cells = this.createCellsForUriList(uriList)
+				}
+				else {
+					cells = this.createCellsForUnknownType(evt)
+				}
+
+				for (let cell of cells) {
+					cell.setAttribute('draggable', true)
+					this.addCell(cell, {
+						before: this.dragging || afterDragElement
+					})
+					changes.push({
+						cell: cell
+						, file: cell.file
+					})
+				}
+				if (this.dragging) {
+					this.dragging.remove()
+				}
+				this.emitter.emit('list-change', {
+					type: 'drop'
+					, cells: cells
+					, files: files
+					, changes: changes
+					, event: evt
+				})
+
 			}
 			else {
-				cells = this.createCellsForUnknownType(evt)
-			}
-
-			for(let cell of cells) {
-				cell.setAttribute('draggable', true)
-				this.addCell(cell, {
-					before: this.dragging
-				})
-				changes.push({
-					cell: cell
-					, file: cell.file
+				this.emitter.emit('list-change', {
+					type: 'reorder'
+					, cells: [this.dragging]
 				})
 			}
-			if(this.dragging) {
-				this.dragging.remove()
-			}
-			this.emitter.emit('list-change', {
-				type: 'drop'
-				, cells: cells
-				, files: files
-				, changes: changes
-				, event: evt
-			})
 
-		}
-		else {
-			this.emitter.emit('list-change', {
-				type: 'reorder'
-				, cells: [this.dragging]
-			})
-		}
+		})
 		this.cleanupDrag()
+		return p
 	}
-	
+
 	/**
 	 * Adds a new item to the list, last item by default 
 	 * @param {string|Element} cell The item to add 
@@ -504,21 +622,21 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	 * @param {*} options.data Data to be set on the element
 	 */
 	addCell(cell, options = {}) {
-		if(typeof cell === 'string') {
+		if (typeof cell === 'string') {
 			cell = this._makeElementFromHTML(cell)
 		}
 
-		if(options.data) {
+		if (options.data) {
 			cell.data = options.data
 		}
-		
-		if(options.first) {
+
+		if (options.first) {
 			this.el.insertAdjacentElement('afterbegin', cell)
 		}
-		else if(options.before) {
+		else if (options.before) {
 			this.el.insertBefore(cell, options.before)
 		}
-		else if(options.after) {
+		else if (options.after) {
 			options.after.after(cell)
 		}
 		else {
@@ -551,7 +669,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	 * and restoring the browser to its pre-drag settings
 	 */
 	cleanupDrag() {
-		if(this.dragging && this.externalDrag) {
+		if (this.dragging && this.externalDrag) {
 			this.dragging.remove()
 		}
 
@@ -593,7 +711,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	 * Sets up the cells to be draggable and makes the mobile touch handles ready for drag.
 	 */
 	render() {
-		if(this.desktopHandleSelector) {
+		if (this.desktopHandleSelector) {
 			this.el.querySelectorAll(this.desktopHandleSelector).forEach(handle => {
 				handle.setAttribute("draggable", true)
 			})
@@ -603,7 +721,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 				cell.setAttribute("draggable", true)
 			})
 		}
-		if(this.mobileHandleSelector) {
+		if (this.mobileHandleSelector) {
 			this.el.querySelectorAll(this.mobileHandleSelector).forEach(handle => {
 				handle.style['touch-action'] = 'none'
 			})
@@ -628,7 +746,7 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 		})
 		return locations
 	}
-	
+
 	/**
 	 * Give a node for the cell or a descendent of a cell, returns the node
 	 * for the cell.
@@ -636,10 +754,10 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	 * @returns 
 	 */
 	getCellFromChild(child) {
-		if(child.parentElement == this.el) {
+		if (child.parentElement == this.el) {
 			return child
 		}
-		if(!child) {
+		if (!child) {
 			return null
 		}
 		return this.getCellFromChild(child.parentElement)
@@ -1226,14 +1344,16 @@ if(elList1) {
 	let emitter = list1.emitter
 	emitter.on('list-change', (evt) => {
 		let eventLog = document.querySelector('.event-log')
-		if(evt.cells && evt.cells.length > 0) {
-			evt.cells.forEach(cell => {
-				eventLog.innerHTML = eventLog.innerHTML + evt.type + ': ' + cell.innerText + '\n'
-			})
+		if(eventLog) {
+			if(evt.cells && evt.cells.length > 0) {
+				let txt = ''
+				evt.cells.forEach(cell => {
+					txt += evt.type + ': ' + cell.innerText + '\n'
+				})
+				eventLog.innerHTML = eventLog.innerHTML + txt
+			}
 		}
 	})
-	
-
 }
 
 

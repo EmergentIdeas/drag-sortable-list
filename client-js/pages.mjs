@@ -19,14 +19,16 @@ if(elList1) {
 	let emitter = list1.emitter
 	emitter.on('list-change', (evt) => {
 		let eventLog = document.querySelector('.event-log')
-		if(evt.cells && evt.cells.length > 0) {
-			evt.cells.forEach(cell => {
-				eventLog.innerHTML = eventLog.innerHTML + evt.type + ': ' + cell.innerText + '\n'
-			})
+		if(eventLog) {
+			if(evt.cells && evt.cells.length > 0) {
+				let txt = ''
+				evt.cells.forEach(cell => {
+					txt += evt.type + ': ' + cell.innerText + '\n'
+				})
+				eventLog.innerHTML = eventLog.innerHTML + txt
+			}
 		}
 	})
-	
-
 }
 
 
