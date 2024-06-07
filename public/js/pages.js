@@ -514,6 +514,26 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 	createCellsForUnknownType(evt) {
 		return []
 	}
+	
+	isExternalDrop(evt) {
+		let uriList
+		if (evt.dataTransfer) {
+			uriList = evt.dataTransfer.getData('text/uri-list')
+		}
+
+		if (this.externalDrag || uriList) {
+			return true
+		}
+		return false
+	}
+	
+	async getFilesEntries(evt) {
+		let files = await dataItemWorker.getFileEntriesFromEvent(evt, {
+			keepDirectories: false
+			, recursive: true
+		})
+		return files
+	}
 
 	/**
 	 * Creates permanent cells for external items dropped into the list,
@@ -532,19 +552,15 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 		}
 
 		let p = new Promise(async (resolve, reject) => {
-			let uriList
-			if (evt.dataTransfer) {
-				uriList = evt.dataTransfer.getData('text/uri-list')
-			}
-
-			if (this.externalDrag || uriList) {
+			if (this.isExternalDrop(evt)) {
 				// if a link is dropped, there's no exteralDrag object, just a drop object
+				let uriList
+				if (evt.dataTransfer) {
+					uriList = evt.dataTransfer.getData('text/uri-list')
+				}
 
 				let changes = []
-				let files = await dataItemWorker.getFileEntriesFromEvent(evt, {
-					keepDirectories: false
-					, recursive: true
-				})
+				let files = await this.getFilesEntries(evt)
 				let cells = []
 				if (files && files.length > 0) {
 					cells = this.createCellsForFiles(files)
@@ -597,7 +613,6 @@ class ListView extends _webhandle_backbone_view__WEBPACK_IMPORTED_MODULE_0__.Vie
 					, changes: changes
 					, event: evt
 				})
-
 			}
 			else {
 				this.emitter.emit('list-change', {
